@@ -4,7 +4,7 @@ import 'Sidebar.css'
 
 const Sidebar = () => {
   return (
-    <div>Sidebar</div>
+    <div>Adding side bar</div>
   )
 }
 
