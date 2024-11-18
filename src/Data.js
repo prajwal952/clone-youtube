@@ -11,6 +11,8 @@ export const value_converter=(value)=>{
         else return value;
 }
 
+
+// to calculate the number of days once we get the date from API response
 export  const daysAgo=(dateString)=> {
     // Parse the input date string into a Date object
     const inputDate = new Date(dateString);
