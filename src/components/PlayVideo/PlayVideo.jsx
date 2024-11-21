@@ -6,60 +6,74 @@ import share from '../../assets/share.png';
 import save from '../../assets/save.png';
 import jack from '../../assets/jack.png';
 import user_profile from '../../assets/user_profile.jpg';
-import { API_KEY } from '../../Data';
+import { API_KEY, value_converter } from '../../Data';
+import moment from 'moment';
 
 
 
 const PlayVideo = ({videoId}) => {
 
+    // console.log('videoId is ',videoId)
+
 const [apidata,setApidata]=useState(null);
+const [channeldata,setChannelData]= useState(null);
 
-// const fetchVideoData= async()=>{
-//     //fatching vidoes data
-//     const videoDeatils_url=`https://youtube.googleapis.com/youtube/v3/videos?part=snippet%2CcontentDetails%2Cstatistics&id=Ks-_Mh1QhMc&key=${API_KEY}`
-//     // const data = await fetch(videoDeatils_url);
-//     // const parseData= await data.json();
-//     // setApidata(parseData.items[0])
+const fetchVideoData= async()=>{
+    console.log('func call')
+    //fatching vidoes data
+    const videoDeatils_url=`https://youtube.googleapis.com/youtube/v3/videos?part=snippet%2CcontentDetails%2Cstatistics&id=${videoId}&key=${API_KEY}`
+     const data = await fetch(videoDeatils_url);
+     console.log('data is',data)
+     const parseData= await data.json();
+    //  console.log('data is parse',parseData.items[0])
+     setApidata(parseData.items[0])
+      //  await fetch(videoDeatils_url).then(res=>res.json()).then(data=>setApidata(data.items[0]))
+}
 
-//         await fetch(videoDeatils_url).then(res=>res.json()).then(data=>setApidata(data.items[0]))
-// }
+const fetchOtherData= async () => {
+ const otherDataUrl=`https://youtube.googleapis.com/youtube/v3/channels?part=snippet%2CcontentDetails%2Cstatistics&id=${apidata? apidata.snippet.channelId :'UCjmJDM5pRKbUlVIzDYYWb6g'}&key=${API_KEY}`
 
+    await fetch(otherDataUrl).then(data=>data.json()).then(response=>setChannelData(response.items[0]))
 
-
-const fetchVideoData = async () => {
-    const videoDeatils_url = `https://youtube.googleapis.com/youtube/v3/videos?part=snippet%2CcontentDetails%2Cstatistics&id=${videoId}&key=${API_KEY}`;
+    console.log('other data is',channeldata)
     
-    try {
-        // Fetch data from YouTube API
-        const response = await fetch(videoDeatils_url);
+}
 
-        // Check if the response is successful
-        if (!response.ok) {
-            console.error("Failed to fetch data", response.status, response.statusText);
-            return;
-        }
 
-        // Parse the JSON response
-        const data = await response.json();
+//     const videoDeatils_url = `https://youtube.googleapis.com/youtube/v3/videos?part=snippet%2CcontentDetails%2Cstatistics&id=${videoId}&key=${API_KEY}`;
+    
+//     try {
+//         // Fetch data from YouTube API
+//         const response = await fetch(videoDeatils_url);
 
-        // Log the full data to inspect the structure
-        console.log("Fetched Data:", data);
+//         // Check if the response is successful
+//         if (!response.ok) {
+//             console.error("Failed to fetch data", response.status, response.statusText);
+//             return;
+//         }
 
-        // Check if items array exists and has data
-        if (data.items && data.items.length > 0) {
-            setApidata(data.items[0]);  // Set the first item in the state
-        } else {
-            console.error("No video data found.");
-        }
-    } catch (error) {
-        console.error("Error fetching video data:", error);
-    }
-};
+//         // Parse the JSON response
+//         const data = await response.json();
+
+//         // Log the full data to inspect the structure
+//         console.log("Fetched Data:", data);
+
+//         // Check if items array exists and has data
+//         if (data.items && data.items.length > 0) {
+//             setApidata(data.items[0]);  // Set the first item in the state
+//         } else {
+//             console.error("No video data found.");
+//         }
+//     } catch (error) {
+//         console.error("Error fetching video data:", error);
+//     }
+// };
 
 useEffect(()=>{
     fetchVideoData()
+    fetchOtherData()
+},[apidata,channeldata])
 
-},[])
 
   return (
     <div className='play-video'>
@@ -67,13 +81,17 @@ useEffect(()=>{
 
         <iframe  src={`https://www.youtube.com/embed/${videoId}?autoplay=1` } frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen ></iframe>
 
-        {/* <h3>{apidata.snippet.title}</h3> */}
-        {console.log("log is",apidata.items[0])}
-        <div className='Play-video-info'>
-            <p>1525 views &bull; 2days ago</p>
+{apidata &&
+<>
+
+ <h3>{apidata.snippet.title}</h3>
+
+ 
+ <div className='Play-video-info'>
+            <p>{ value_converter(apidata.statistics.viewCount)} views &bull; { moment(apidata.snippet.publishedAt).fromNow()}</p>
             <div>
                 <span>
-                    <img src={like} alt="" /> 125
+                    <img src={like} alt="" /> { value_converter(apidata.statistics.likeCount)}
                 </span>
                 <span>
                     <img src={dislike} alt="" /> 25
@@ -86,22 +104,29 @@ useEffect(()=>{
                 </span>
             </div>
         </div>
+</>      
+
+
+}
+       
+       
 
         <hr />
 
         <div className="publisher">
-            <img src={jack} alt="" />
+            <img src={channeldata ? channeldata.snippet.thumbnails.medium.url :jack} alt="" />
+            {console.log("channel data is 2 ",channeldata)}
             <div>
-                <p>Discovery Tv</p>
+                <p>{apidata? apidata.snippet.channelTitle:"Channel Title"}</p>
                 <span>1M Subscribers</span>
             </div>
             <button>Subscribe</button>
         </div>
         <div className='vid-description'>
-            <p>Channel which helps you to explore</p>
-            <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Enim, officia? Fugiat voluptatem vel praesentium voluptas possimus harum quaerat odio!</p>
+            <p>{apidata? apidata.snippet.description.slice(0,250): 'Description'}</p>
+    
             <hr />
-            <h4>130 Comments</h4>
+            <h4>{ apidata? value_converter(apidata.statistics.commentCount) :""} Comments</h4>
             <div className="comment">
                 <img src={user_profile} alt="" />
                 <div>
@@ -118,7 +143,7 @@ useEffect(()=>{
             </div>
 
             <div className="comment">
-                <img src={user_profile} alt="" />
+                <img src={channeldata ? channeldata.snippet.thumbnails.default.url :user_profile} alt="" />
                 <div>
                     <h3>Brayi Leo <span>1 day ago</span> </h3>
                     <p> Lorem ipsum dolor sit amet consectetur. Lorem ipsum dolor sit amet consectetur adipisicing elit. Nulla, maxime.</p>
