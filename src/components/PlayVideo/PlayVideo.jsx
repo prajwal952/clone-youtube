@@ -8,15 +8,19 @@ import jack from '../../assets/jack.png';
 import user_profile from '../../assets/user_profile.jpg';
 import { API_KEY, value_converter } from '../../Data';
 import moment from 'moment';
+import { useParams } from 'react-router-dom';
 
 
 
-const PlayVideo = ({videoId}) => {
+const PlayVideo = () => {
+
+    const {videoId} =useParams()
 
     // console.log('videoId is ',videoId)
 
 const [apidata,setApidata]=useState(null);
 const [channeldata,setChannelData]= useState(null);
+const [commentdata,setCommentData]=useState([]);
 
 const fetchVideoData= async()=>{
     console.log('func call')
@@ -36,8 +40,14 @@ const fetchOtherData= async () => {
     await fetch(otherDataUrl).then(data=>data.json()).then(response=>setChannelData(response.items[0]))
 
     console.log('other data is',channeldata)
+
+    const comment_url=`https://youtube.googleapis.com/youtube/v3/commentThreads?part=snippet%2Creplies&videoId=${videoId}&key=${API_KEY}`
+
+    await fetch(comment_url).then(res=>res.json()).then(data=>setCommentData(data.items))
+
     
 }
+
 
 
 //     const videoDeatils_url = `https://youtube.googleapis.com/youtube/v3/videos?part=snippet%2CcontentDetails%2Cstatistics&id=${videoId}&key=${API_KEY}`;
@@ -69,10 +79,19 @@ const fetchOtherData= async () => {
 //     }
 // };
 
+// useEffect(()=>{
+//     fetchVideoData()
+//     fetchOtherData()
+// },[apidata,channeldata])
+
 useEffect(()=>{
     fetchVideoData()
-    fetchOtherData()
-},[apidata,channeldata])
+    
+},[videoId])
+
+useEffect(()=>{
+     fetchOtherData()
+},[apidata])
 
 
   return (
@@ -118,7 +137,7 @@ useEffect(()=>{
             {console.log("channel data is 2 ",channeldata)}
             <div>
                 <p>{apidata? apidata.snippet.channelTitle:"Channel Title"}</p>
-                <span>1M Subscribers</span>
+                <span>{channeldata? value_converter(channeldata.statistics.subscriberCount) : "1M"} Subscribers</span>
             </div>
             <button>Subscribe</button>
         </div>
@@ -127,80 +146,27 @@ useEffect(()=>{
     
             <hr />
             <h4>{ apidata? value_converter(apidata.statistics.commentCount) :""} Comments</h4>
-            <div className="comment">
-                <img src={user_profile} alt="" />
-                <div>
-                    <h3>Brayi Leo <span>1 day ago</span> </h3>
-                    <p> Lorem ipsum dolor sit amet consectetur. Lorem ipsum dolor sit amet consectetur adipisicing elit. Nulla, maxime.</p>
-                    <div className="comment-action">
-                        <img src={like} alt="" />
-                        <span>244</span>
-                        <img src={dislike} alt="" />
-                        <span>6</span>
-                    </div>
-                
-                </div>
-            </div>
 
-            <div className="comment">
-                <img src={channeldata ? channeldata.snippet.thumbnails.default.url :user_profile} alt="" />
-                <div>
-                    <h3>Brayi Leo <span>1 day ago</span> </h3>
-                    <p> Lorem ipsum dolor sit amet consectetur. Lorem ipsum dolor sit amet consectetur adipisicing elit. Nulla, maxime.</p>
-                    <div className="comment-action">
-                        <img src={like} alt="" />
-                        <span>244</span>
-                        <img src={dislike} alt="" />
-                        <span>6</span>
-                    </div>
-                
-                </div>
-            </div>
+            {commentdata.map((item,ind)=>(
 
-            <div className="comment">
-                <img src={user_profile} alt="" />
-                <div>
-                    <h3>Brayi Leo <span>1 day ago</span> </h3>
-                    <p> Lorem ipsum dolor sit amet consectetur. Lorem ipsum dolor sit amet consectetur adipisicing elit. Nulla, maxime.</p>
-                    <div className="comment-action">
-                        <img src={like} alt="" />
-                        <span>244</span>
-                        <img src={dislike} alt="" />
-                        <span>6</span>
-                    </div>
-                
-                </div>
-            </div>
+<div className="comment" key={ind}>
+<img src={item.snippet.topLevelComment.snippet.authorProfileImageUrl} alt="" />
+<div>
+    <h3>{item.snippet.topLevelComment.snippet.authorDisplayName}<span>  moment({item.snippet.topLevelComment.snippet.authorDisplayName.publishedAt}).fromNow()</span> </h3>
+    <p> {item.snippet.topLevelComment.snippet.textDisplay} </p>
+    <div className="comment-action">
+        <img src={like} alt="" />
+        <span>{value_converter(item.snippet.topLevelComment.snippet.likeCount)}</span>
+        <img src={dislike} alt="" />
+        <span>6</span>
+    </div>
 
-            <div className="comment">
-                <img src={user_profile} alt="" />
-                <div>
-                    <h3>Brayi Leo <span>1 day ago</span> </h3>
-                    <p> Lorem ipsum dolor sit amet consectetur. Lorem ipsum dolor sit amet consectetur adipisicing elit. Nulla, maxime.</p>
-                    <div className="comment-action">
-                        <img src={like} alt="" />
-                        <span>244</span>
-                        <img src={dislike} alt="" />
-                        <span>6</span>
-                    </div>
-                
-                </div>
-            </div>
+</div>
+</div>
+            )) }
+            
 
-            <div className="comment">
-                <img src={user_profile} alt="" />
-                <div>
-                    <h3>Brayi Leo <span>1 day ago</span> </h3>
-                    <p> Lorem ipsum dolor sit amet consectetur. Lorem ipsum dolor sit amet consectetur adipisicing elit. Nulla, maxime.</p>
-                    <div className="comment-action">
-                        <img src={like} alt="" />
-                        <span>244</span>
-                        <img src={dislike} alt="" />
-                        <span>6</span>
-                    </div>
-                
-                </div>
-            </div>
+        
         </div>
       
     </div>

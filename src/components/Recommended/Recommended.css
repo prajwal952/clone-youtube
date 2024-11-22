@@ -1,6 +1,7 @@
 .Recommended{
     flex-basis: 29%;
     flex-wrap: wrap;
+    border-radius: 5px;
 }
 
 .side-video-list{
